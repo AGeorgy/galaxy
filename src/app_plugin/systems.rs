@@ -1,57 +1,33 @@
 use bevy::prelude::*;
+use bevy_pancam::PanCam;
 
-const X_EXTENT: f32 = 14.;
+pub fn setup(mut commands: Commands, assets: Res<AssetServer>) {
+    commands
+        .spawn_bundle(Camera2dBundle::default())
+        .insert(PanCam::default());
 
-pub fn setup(
-    mut commands: Commands,
-    mut meshes: ResMut<Assets<Mesh>>,
-    mut materials: ResMut<Assets<StandardMaterial>>,
-) {
-    let debug_material = materials.add(StandardMaterial { ..default() });
-
-    let shapes = [
-        meshes.add(shape::Cube::default().into()),
-        meshes.add(shape::Box::default().into()),
-        meshes.add(shape::Capsule::default().into()),
-        meshes.add(shape::Torus::default().into()),
-        meshes.add(shape::Icosphere::default().into()),
-        meshes.add(shape::UVSphere::default().into()),
-    ];
-
-    let num_shapes = shapes.len();
-
-    for (i, shape) in shapes.into_iter().enumerate() {
-        commands.spawn_bundle(PbrBundle {
-            mesh: shape,
-            material: debug_material.clone(),
-            transform: Transform {
-                translation: Vec3::new(
-                    -X_EXTENT / 2. + i as f32 / (num_shapes - 1) as f32 * X_EXTENT,
-                    2.0,
-                    0.0,
-                ),
-                rotation: Quat::from_rotation_x(-std::f32::consts::PI / 4.),
+    let sprite_handle = assets.load("particle.png");
+    let spacing = 5.0;
+    let w = 100;
+    let mut sprites = vec![];
+    let h = 100;
+    for i in 0..w {
+        for j in 0..h {
+            sprites.push(SpriteBundle {
+                sprite: Sprite {
+                    color: Color::rgba(1., 0.8, 0.6, 1.),
+                    custom_size: Some(Vec2::new(5.0, 5.0)),
+                    ..default()
+                },
+                texture: sprite_handle.clone(),
+                transform: Transform::from_translation(Vec3::new(
+                    i as f32 * spacing - w as f32 * spacing / 2.,
+                    j as f32 * spacing - h as f32 * spacing / 2.,
+                    0.,
+                )),
                 ..default()
-            },
-            ..default()
-        });
+            });
+        }
     }
-
-    commands.spawn_bundle(PointLightBundle {
-        point_light: PointLight {
-            intensity: 9000.0,
-            range: 100.,
-            shadows_enabled: true,
-            ..default()
-        },
-        transform: Transform::from_xyz(8.0, 16.0, 8.0),
-        ..default()
-    });
-
-    // ground plane
-    commands.spawn_bundle(PbrBundle {
-        mesh: meshes.add(shape::Plane { size: 50. }.into()),
-        material: materials.add(Color::SILVER.into()),
-        ..default()
-    });
+    commands.spawn_batch(sprites);
 }

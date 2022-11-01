@@ -1,7 +1,7 @@
 use bevy::prelude::*;
 use bevy_egui::EguiPlugin;
-use bevy_flycam::PlayerPlugin;
 use bevy_inspector_egui::WorldInspectorPlugin;
+use bevy_pancam::*;
 
 mod app_plugin;
 
@@ -10,7 +10,7 @@ fn main() {
         .add_plugins(DefaultPlugins)
         .add_plugin(EguiPlugin)
         .add_plugin(WorldInspectorPlugin::new())
-        .add_plugin(PlayerPlugin)
+        .add_plugin(PanCamPlugin)
         .add_plugin(app_plugin::AppPlugin)
         .run();
 }
