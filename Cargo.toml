@@ -10,6 +10,7 @@ bevy = { version = "0.8.1", features = ["dynamic"] }
 bevy_egui = "0.16.1"
 bevy-inspector-egui = "0.13.0"
 bevy_pancam = "0.6.1"
+rand = "0.8.5"
 
 # Enable a small amount of optimization in debug mode
 [profile.dev]

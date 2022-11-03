@@ -17,6 +17,14 @@ pub struct DensityWaveResource {
 }
 
 impl DensityWaveResource {
+    pub fn val_from_prob(&self, val: f32) -> f32 {
+        let h = 1.0 / (self.y2.len() - 1) as f32;
+        let i = (val / h).floor();
+        let remainder = val - i * h;
+
+        self.y2[i as usize] + self.m2[i as usize] * remainder
+    }
+
     pub fn build(&mut self) {
         let mut h = (self.max - self.min) / self.steps as f32;
         let mut y = 0.;
@@ -89,23 +97,3 @@ impl DensityWaveResource {
         i0 * (-r / a).exp()
     }
 }
-// impl FromWorld for DensityWaveResource {
-//     fn from_world(_world: &mut World) -> Self {
-//         let wave_steps = 1000;
-//         DensityWaveResource {
-//             min: 0.,
-//             max: 1., //_radFarField,
-//             steps: wave_steps,
-//             i0: 1.,
-//             k: 0.02,
-//             a: 1.,            //radGalaxy / 3.0,
-//             bulge_radius: 1., //radCore,
-//             m1: Vec::with_capacity(wave_steps.try_into().unwrap()),
-//             y1: Vec::with_capacity(wave_steps.try_into().unwrap()),
-//             x1: Vec::with_capacity(wave_steps.try_into().unwrap()),
-//             m2: Vec::with_capacity(wave_steps.try_into().unwrap()),
-//             y2: Vec::with_capacity(wave_steps.try_into().unwrap()),
-//             x2: Vec::with_capacity(wave_steps.try_into().unwrap()),
-//         }
-//     }
-// }
