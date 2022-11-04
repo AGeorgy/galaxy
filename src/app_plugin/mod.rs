@@ -44,6 +44,8 @@ impl Plugin for AppPlugin {
 
         app.insert_resource(Msaa { samples: 4 })
             .insert_resource(ClearColor(Color::BLACK))
+            .register_type::<components::Star>()
+            .register_type::<components::StarType>()
             .insert_resource(galaxy_settings)
             .insert_resource(density_wave)
             .add_startup_system(systems::setup)

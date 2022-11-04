@@ -1,4 +1,4 @@
-use bevy::{prelude::*, render::texture::DEFAULT_IMAGE_HANDLE};
+use bevy::{prelude::*, reflect::FromReflect, render::texture::DEFAULT_IMAGE_HANDLE};
 use std::f32;
 
 const PC_TO_KM: f32 = 3.08567758129e13;
@@ -116,7 +116,8 @@ impl Default for StarSpriteBundle {
     }
 }
 
-#[derive(Component, Debug, Default, Clone)]
+#[derive(Component, Debug, Default, Clone, Reflect)]
+#[reflect(Component)]
 pub struct Star {
     pub theta0: f32,         // initial angular position on the ellipse
     pub vel_theta: f32,      // angular velocity
@@ -127,7 +128,9 @@ pub struct Star {
     pub mag: f32,            // brightness;
     pub star_type: StarType, // Type 0:star, 1:dust, 2 and 3: h2 regions
 }
-#[derive(Debug, Default, Clone)]
+
+#[derive(Debug, Default, Clone, Reflect, FromReflect)]
+#[reflect_value()]
 pub enum StarType {
     #[default]
     Star,
@@ -135,3 +138,5 @@ pub enum StarType {
     //DustFilaments,
     //H2,
 }
+
+impl StarType {}
