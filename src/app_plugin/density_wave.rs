@@ -1,4 +1,8 @@
-pub struct DensityWaveResource {
+use bevy::{prelude::*, reflect::FromReflect};
+
+#[derive(Component, Debug, Default, Clone, Reflect, FromReflect)]
+#[reflect(Component)]
+pub struct DensityWave {
     pub min: f32,
     pub max: f32,
     pub steps: i32,
@@ -16,7 +20,7 @@ pub struct DensityWaveResource {
     pub x2: Vec<f32>,
 }
 
-impl DensityWaveResource {
+impl DensityWave {
     pub fn val_from_prob(&self, val: f32) -> f32 {
         let h = 1.0 / (self.y2.len() - 1) as f32;
         let i = (val / h).floor();

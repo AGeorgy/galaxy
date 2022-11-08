@@ -1,11 +1,13 @@
-use bevy::{prelude::*, reflect::FromReflect, render::texture::DEFAULT_IMAGE_HANDLE};
+use bevy::{prelude::*, reflect::FromReflect};
 use std::f32;
 
 const PC_TO_KM: f32 = 3.08567758129e13;
 const SEC_PER_YEAR: f32 = 365.25 * 86400.;
 const CONSTANT_OF_GRAVITY: f32 = 6.672e-11;
 
-pub struct GalaxySettingsResource {
+#[derive(Component, Debug, Default, Clone, Reflect, FromReflect)]
+#[reflect(Component)]
+pub struct GalaxySettings {
     pub radius: f32,
     pub bulge_radius: f32,
     pub far_field_radius: f32,
@@ -14,7 +16,7 @@ pub struct GalaxySettingsResource {
     pub outter_excentricity: f32,
     pub ellipse_disturbances: i32,
     pub ellipse_disturbances_damping: i32,
-    pub count_stars: i32,
+    pub count_stars: usize,
     pub count_h2: i32,
     pub has_dark_matter: bool,
     pub base_temp: f32,
@@ -22,7 +24,11 @@ pub struct GalaxySettingsResource {
     pub seed: u64,
 }
 
-impl GalaxySettingsResource {
+impl GalaxySettings {
+    // pub fn get_count_all_objects(&self) -> usize {
+    //     self.count_stars
+    // }
+
     pub fn get_excentricity(&self, rad: f32) -> f32 {
         if rad < self.bulge_radius {
             // Core region of the galaxy. Innermost part is round
@@ -49,9 +55,9 @@ impl GalaxySettingsResource {
     pub fn get_orbital_velocity(&self, rad: f32) -> f32 {
         let vel_kms: f32; // velovity in kilometer per seconds
         if self.has_dark_matter {
-            vel_kms = GalaxySettingsResource::velocity_with_dark_matter(rad);
+            vel_kms = GalaxySettings::velocity_with_dark_matter(rad);
         } else {
-            vel_kms = GalaxySettingsResource::velocity_without_dark_matter(rad);
+            vel_kms = GalaxySettings::velocity_without_dark_matter(rad);
         }
 
         // Calculate velocity in degree per year
@@ -63,15 +69,15 @@ impl GalaxySettingsResource {
 
     fn velocity_with_dark_matter(r: f32) -> f32 {
         const MZ: f32 = 100.;
-        let mass_halo = GalaxySettingsResource::mass_halo(r);
-        let mass_disc = GalaxySettingsResource::mass_disc(r);
+        let mass_halo = GalaxySettings::mass_halo(r);
+        let mass_disc = GalaxySettings::mass_disc(r);
         let v = 20000.0 * (CONSTANT_OF_GRAVITY * (mass_halo + mass_disc + MZ) / r).sqrt();
         return v;
     }
 
     fn velocity_without_dark_matter(r: f32) -> f32 {
         const MZ: f32 = 100.;
-        20000.0 * (CONSTANT_OF_GRAVITY * (GalaxySettingsResource::mass_disc(r) + MZ) / r).sqrt()
+        20000.0 * (CONSTANT_OF_GRAVITY * (GalaxySettings::mass_disc(r) + MZ) / r).sqrt()
     }
 
     fn mass_disc(r: f32) -> f32 {
@@ -88,55 +94,3 @@ impl GalaxySettingsResource {
             * (4. * f32::consts::PI * 3_f32.powf(r) / 3.);
     }
 }
-
-#[derive(Bundle, Clone)]
-pub struct StarSpriteBundle {
-    pub star: Star,
-    pub sprite: Sprite,
-    pub transform: Transform,
-    pub global_transform: GlobalTransform,
-    pub texture: Handle<Image>,
-    /// User indication of whether an entity is visible
-    pub visibility: Visibility,
-    /// Algorithmically-computed indication of whether an entity is visible and should be extracted for rendering
-    pub computed_visibility: ComputedVisibility,
-}
-
-impl Default for StarSpriteBundle {
-    fn default() -> Self {
-        Self {
-            sprite: Default::default(),
-            transform: Default::default(),
-            global_transform: Default::default(),
-            texture: DEFAULT_IMAGE_HANDLE.typed(),
-            visibility: Default::default(),
-            computed_visibility: Default::default(),
-            star: Default::default(),
-        }
-    }
-}
-
-#[derive(Component, Debug, Default, Clone, Reflect)]
-#[reflect(Component)]
-pub struct Star {
-    pub theta0: f32,         // initial angular position on the ellipse
-    pub vel_theta: f32,      // angular velocity
-    pub tilt_angle: f32,     // tilt angle of the ellipse
-    pub a: f32,              // semi-minor axes
-    pub b: f32,              // semi-major axes
-    pub temp: f32,           // star temperature
-    pub mag: f32,            // brightness;
-    pub star_type: StarType, // Type 0:star, 1:dust, 2 and 3: h2 regions
-}
-
-#[derive(Debug, Default, Clone, Reflect, FromReflect)]
-#[reflect_value()]
-pub enum StarType {
-    #[default]
-    Star,
-    //Dust,
-    //DustFilaments,
-    //H2,
-}
-
-impl StarType {}
