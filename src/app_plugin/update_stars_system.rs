@@ -53,7 +53,8 @@ fn create_stars(
     stars: &mut Vec<star_component::StarSpriteBundle>,
 ) {
     let mut temp = 6000.;
-    let size = Some(Vec2::new(1.0, 1.0));
+    let mut mag = 1.0;
+    let size = Vec2::ONE;
     // First star ist the black hole at the centre
     let star = star_component::StarSpriteBundle {
         texture: sprite_handle.clone(),
@@ -64,11 +65,11 @@ fn create_stars(
             a: 0.,
             b: 0.,
             temp: temp,
-            mag: 1.,
+            mag: mag,
             star_type: StarType::Star,
         },
         sprite: Sprite {
-            custom_size: size,
+            custom_size: Some(size * mag * 4.0),
             color: color_from_temperature_hrd(temp),
             ..default()
         },
@@ -80,6 +81,7 @@ fn create_stars(
     for i in 1..galaxy_setting.count_stars {
         let rad: f32 = density_wave.val_from_prob(rnd.gen());
         temp = (4000. * rnd.gen::<f32>() - 2000.) + 6000.;
+        mag = 0.1 + 0.4 * rnd.gen::<f32>();
         let mut star_sprite = star_component::StarSpriteBundle {
             texture: sprite_handle.clone(),
             star: Star {
@@ -89,11 +91,11 @@ fn create_stars(
                 a: rad,
                 b: rad * galaxy_setting.get_excentricity(rad),
                 temp: temp,
-                mag: 0.1 + 0.4 * rnd.gen::<f32>(),
+                mag: mag,
                 star_type: StarType::Star,
             },
             sprite: Sprite {
-                custom_size: size,
+                custom_size: Some(size * mag * 4.0),
                 color: color_from_temperature_hrd(temp),
                 ..default()
             },
@@ -109,15 +111,37 @@ fn create_stars(
     }
 }
 
-pub fn update_position(mut star_query: Query<(&Star, &mut Transform), Added<Transform>>) {
+pub fn update_position(
+    mut star_query: Query<(&Star, &mut Transform), Added<Transform>>,
+    galaxy_setting: Query<&galaxy_setting_component::GalaxySettings>,
+) {
+    let galaxy_setting = galaxy_setting.single();
     for (star, mut transform) in &mut star_query {
-        transform.translation = calculate_translation(star);
+        transform.translation = calculate_translation(galaxy_setting, star);
     }
 }
 
 const DEG_TO_RAD: f32 = 0.01745329251;
 
-fn calculate_translation(star: &Star) -> Vec3 {
+// vec2 calcPos(float a, float b, float theta, float velTheta, float time, float tiltAngle) {
+//     float thetaActual = theta + velTheta * time;
+//     float beta = -tiltAngle;
+//     float alpha = thetaActual * DEG_TO_RAD;
+//     float cosalpha = cos(alpha);
+//     float sinalpha = sin(alpha);
+//     float cosbeta = cos(beta);
+//     float sinbeta = sin(beta);
+//     vec2 center = vec2(0,0);
+//     vec2 ps = vec2(center.x + (a * cosalpha * cosbeta - b * sinalpha * sinbeta),
+//                    center.y + (a * cosalpha * sinbeta + b * sinalpha * cosbeta));
+//     if (pertAmp > 0.0 && pertN > 0) {
+//         ps.x += (a / pertAmp) * sin(alpha * 2.0 * float(pertN));
+//         ps.y += (a / pertAmp) * cos(alpha * 2.0 * float(pertN));
+//     }
+// return ps;
+// }
+
+fn calculate_translation(setting: &galaxy_setting_component::GalaxySettings, star: &Star) -> Vec3 {
     let theta_actual = star.theta0 + star.vel_theta;
     let beta = -star.tilt_angle;
     let alpha = theta_actual * DEG_TO_RAD;
@@ -126,11 +150,17 @@ fn calculate_translation(star: &Star) -> Vec3 {
     let cosbeta = beta.cos();
     let sinbeta = beta.sin();
 
-    Vec3 {
+    let mut pos = Vec3 {
         x: (star.a * cosalpha * cosbeta - star.b * sinalpha * sinbeta),
         y: (star.a * cosalpha * sinbeta + star.b * sinalpha * cosbeta),
         z: 0.,
+    };
+
+    if setting.pert_amp > 0 && setting.pert_n > 0 {
+        pos.x += (star.a / setting.pert_amp as f32) * (alpha * 2.0 * setting.pert_n as f32).sin();
+        pos.y += (star.a / setting.pert_amp as f32) * (alpha * 2.0 * setting.pert_n as f32).cos();
     }
+    pos
 }
 
 fn color_from_temperature_hrd(temp: f32) -> Color {

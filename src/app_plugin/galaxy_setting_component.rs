@@ -21,6 +21,8 @@ pub struct GalaxySettings {
     pub has_dark_matter: bool,
     pub base_temp: f32,
     pub dust_render_size: i32,
+    pub pert_n: i32,
+    pub pert_amp: i32,
     pub seed: u64,
 }
 

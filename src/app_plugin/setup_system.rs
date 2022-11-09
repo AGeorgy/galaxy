@@ -24,6 +24,8 @@ pub fn setup(mut commands: Commands) {
         base_temp: 4000.,
         dust_render_size: 70,
         seed: 1234567890,
+        pert_n: 2,
+        pert_amp: 40,
     };
     let wave_steps = 1000;
     let mut density_wave = density_wave::DensityWave {
