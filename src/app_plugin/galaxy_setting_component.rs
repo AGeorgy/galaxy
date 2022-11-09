@@ -17,7 +17,7 @@ pub struct GalaxySettings {
     pub ellipse_disturbances: i32,
     pub ellipse_disturbances_damping: i32,
     pub count_stars: usize,
-    pub count_h2: i32,
+    //pub count_h2: i32,
     pub has_dark_matter: bool,
     pub base_temp: f32,
     pub dust_render_size: i32,
@@ -90,7 +90,6 @@ impl GalaxySettings {
     fn mass_halo(r: f32) -> f32 {
         let rho_h0 = 0.15;
         let r_c = 2500.;
-        return rho_h0 * 1. / (1. + 2_f32.powf(r / r_c))
-            * (4. * f32::consts::PI * 3_f32.powf(r) / 3.);
+        return rho_h0 * 1. / (1. + (r / r_c).powf(2.)) * (4. * f32::consts::PI * r.powf(3.) / 3.);
     }
 }
