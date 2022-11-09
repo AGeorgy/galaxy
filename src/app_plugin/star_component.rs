@@ -41,14 +41,15 @@ pub struct Star {
     pub star_type: StarType, // Type 0:star, 1:dust, 2 and 3: h2 regions
 }
 
-#[derive(Debug, Default, Clone, Reflect, FromReflect)]
+#[derive(Debug, Default, Clone, Copy, PartialEq, Eq, Reflect, FromReflect)]
 #[reflect_value()]
 pub enum StarType {
     #[default]
     Star,
-    //Dust,
-    //DustFilaments,
-    //H2,
+    Dust,
+    DustFilaments,
+    H2,
+    H2Core,
 }
 
 impl StarType {}

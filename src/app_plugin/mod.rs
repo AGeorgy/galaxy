@@ -20,6 +20,6 @@ impl Plugin for AppPlugin {
             .add_system(update_stars_system::update_stars)
             // .add_plugin(bevy::diagnostic::LogDiagnosticsPlugin::default())
             // .add_plugin(bevy::diagnostic::FrameTimeDiagnosticsPlugin)
-            .add_system(update_stars_system::update_position);
+            .add_system(update_stars_system::update_transform);
     }
 }

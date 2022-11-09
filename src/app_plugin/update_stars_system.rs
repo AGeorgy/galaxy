@@ -38,23 +38,100 @@ fn create_all_objects(
     density_wave: &density_wave::DensityWave,
     sprite_handle: Handle<Image>,
 ) -> Vec<star_component::StarSpriteBundle> {
-    let rnd = StdRng::seed_from_u64(galaxy_setting.seed);
+    let mut rnd = StdRng::seed_from_u64(galaxy_setting.seed);
     let mut stars: Vec<star_component::StarSpriteBundle> = vec![];
 
-    create_stars(galaxy_setting, density_wave, sprite_handle, rnd, &mut stars);
+    create_dusts(
+        galaxy_setting,
+        density_wave,
+        &sprite_handle,
+        &mut rnd,
+        &mut stars,
+    );
+
+    create_dusts_filaments(galaxy_setting, &sprite_handle, &mut rnd, &mut stars);
+
+    create_h2(galaxy_setting, &sprite_handle, &mut rnd, &mut stars);
+
+    create_stars(
+        galaxy_setting,
+        density_wave,
+        &sprite_handle,
+        &mut rnd,
+        &mut stars,
+    );
+
     stars
+}
+
+fn create_h2(
+    galaxy_setting: &galaxy_setting_component::GalaxySettings,
+    sprite_handle: &Handle<Image>,
+    rnd: &mut StdRng,
+    stars: &mut Vec<star_component::StarSpriteBundle>,
+) {
+    for _i in 0..galaxy_setting.count_h2 {
+        let x: f32 = 2. * galaxy_setting.radius * rnd.gen::<f32>() - galaxy_setting.radius;
+        let y: f32 = 2. * galaxy_setting.radius * rnd.gen::<f32>() - galaxy_setting.radius;
+        let rad = f32::sqrt(x * x + y * y);
+
+        let temp = 6000. + (6000. * rnd.gen::<f32>() - 3000.);
+        let mag = 0.1 + 0.05 * rnd.gen::<f32>();
+        let b = rad * galaxy_setting.get_excentricity(rad);
+        let star_sprite = star_component::StarSpriteBundle {
+            texture: sprite_handle.clone(),
+            star: Star {
+                theta0: 360.0 * rnd.gen::<f32>(),
+                vel_theta: galaxy_setting.get_orbital_velocity((rad + b) / 2.),
+                tilt_angle: galaxy_setting.get_angular_offset(rad),
+                a: rad,
+                b: b,
+                temp: temp,
+                mag: mag,
+                star_type: StarType::H2,
+            },
+            sprite: Sprite {
+                color: {
+                    let col = color_from_temperature_hrd(temp) * mag;
+                    Color::rgba(col.r() * 2.0, col.g() * 0.5, col.b() * 0.5, col.a())
+                },
+                ..default()
+            },
+            ..default()
+        };
+        let core_h2 = star_component::StarSpriteBundle {
+            texture: sprite_handle.clone(),
+            star: Star {
+                theta0: 360.0 * rnd.gen::<f32>(),
+                vel_theta: galaxy_setting.get_orbital_velocity((rad + b) / 2.),
+                tilt_angle: galaxy_setting.get_angular_offset(rad),
+                a: rad,
+                b: b,
+                temp: temp,
+                mag: mag,
+                star_type: StarType::H2Core,
+            },
+            sprite: Sprite {
+                color: Color::rgba(1.0, 1.0, 1.0, 1.0),
+                ..default()
+            },
+            ..default()
+        };
+
+        stars.push(star_sprite);
+        stars.push(core_h2);
+    }
 }
 
 fn create_stars(
     galaxy_setting: &galaxy_setting_component::GalaxySettings,
     density_wave: &density_wave::DensityWave,
-    sprite_handle: Handle<Image>,
-    mut rnd: StdRng,
+    sprite_handle: &Handle<Image>,
+    rnd: &mut StdRng,
     stars: &mut Vec<star_component::StarSpriteBundle>,
 ) {
     let mut temp = 6000.;
     let mut mag = 1.0;
-    let size = Vec2::ONE;
     // First star ist the black hole at the centre
     let star = star_component::StarSpriteBundle {
         texture: sprite_handle.clone(),
@@ -69,8 +146,7 @@ fn create_stars(
             star_type: StarType::Star,
         },
         sprite: Sprite {
-            custom_size: Some(size * mag * 4.0),
-            color: color_from_temperature_hrd(temp),
+            color: color_from_temperature_hrd(temp) * mag,
             ..default()
         },
         ..default()
@@ -95,8 +171,7 @@ fn create_stars(
                 star_type: StarType::Star,
             },
             sprite: Sprite {
-                custom_size: Some(size * mag * 4.0),
-                color: color_from_temperature_hrd(temp),
+                color: color_from_temperature_hrd(temp) * mag,
                 ..default()
             },
             ..default()
@@ -111,54 +186,164 @@ fn create_stars(
     }
 }
 
-pub fn update_position(
-    mut star_query: Query<(&Star, &mut Transform), Added<Transform>>,
+fn create_dusts(
+    galaxy_setting: &galaxy_setting_component::GalaxySettings,
+    density_wave: &density_wave::DensityWave,
+    sprite_handle: &Handle<Image>,
+    rnd: &mut StdRng,
+    stars: &mut Vec<star_component::StarSpriteBundle>,
+) {
+    let mag = 0.02 + 0.15 * rnd.gen::<f32>();
+    let mut rad: f32 = 0.0;
+
+    // Initialize dust
+    for i in 0..galaxy_setting.count_dusts {
+        if i % 2 == 0 {
+            rad = density_wave.val_from_prob(rnd.gen());
+        } else {
+            let x: f32 = 2. * galaxy_setting.radius * rnd.gen::<f32>() - galaxy_setting.radius;
+            let y: f32 = 2. * galaxy_setting.radius * rnd.gen::<f32>() - galaxy_setting.radius;
+            rad = f32::sqrt(x * x + y * y);
+        }
+
+        let temp = galaxy_setting.base_temp + rad / 4.5;
+        let b = rad * galaxy_setting.get_excentricity(rad);
+        let mut star_sprite = star_component::StarSpriteBundle {
+            texture: sprite_handle.clone(),
+            star: Star {
+                theta0: 360.0 * rnd.gen::<f32>(),
+                vel_theta: galaxy_setting.get_orbital_velocity((rad + b) / 2.),
+                tilt_angle: galaxy_setting.get_angular_offset(rad),
+                a: rad,
+                b: rad * galaxy_setting.get_excentricity(rad),
+                temp,
+                mag,
+                star_type: StarType::Dust,
+            },
+            sprite: Sprite {
+                color: color_from_temperature_hrd(temp) * mag,
+                ..default()
+            },
+            ..default()
+        };
+
+        // Make a small portion of the stars brighter
+        if i < galaxy_setting.count_stars / 60 {
+            star_sprite.star.mag = 1_f32.min(star_sprite.star.mag + 0.1 + rnd.gen::<f32>() * 0.4);
+        }
+
+        stars.push(star_sprite);
+    }
+}
+
+fn create_dusts_filaments(
+    galaxy_setting: &galaxy_setting_component::GalaxySettings,
+    sprite_handle: &Handle<Image>,
+    rnd: &mut StdRng,
+    stars: &mut Vec<star_component::StarSpriteBundle>,
+) {
+    const FACTOR: usize = 100;
+    for _i in 0..galaxy_setting.count_dusts_filaments / FACTOR {
+        {
+            let x: f32 = 2. * galaxy_setting.radius * rnd.gen::<f32>() - galaxy_setting.radius;
+            let y: f32 = 2. * galaxy_setting.radius * rnd.gen::<f32>() - galaxy_setting.radius;
+            let mut rad = f32::sqrt(x * x + y * y);
+
+            let theta = 360.0 * rnd.gen::<f32>();
+            let mag = 0.1 + 0.05 * rnd.gen::<f32>();
+            let temp = galaxy_setting.base_temp + rad / 4.5 - 1000.;
+            let b = rad * galaxy_setting.get_excentricity(rad);
+            let num = (FACTOR as f32 * rnd.gen::<f32>()) as usize;
+            for _j in 0..num {
+                rad = rad + 200. - 400. * rnd.gen::<f32>();
+                let star_sprite = star_component::StarSpriteBundle {
+                    texture: sprite_handle.clone(),
+                    star: Star {
+                        theta0: theta + 10. - 20. * rnd.gen::<f32>(),
+                        vel_theta: galaxy_setting.get_orbital_velocity((rad + b) / 2.),
+                        tilt_angle: galaxy_setting.get_angular_offset(rad),
+                        a: rad,
+                        b: rad * galaxy_setting.get_excentricity(rad),
+                        temp,
+                        mag: mag + 0.025 * rnd.gen::<f32>(),
+                        star_type: StarType::DustFilaments,
+                    },
+                    sprite: Sprite {
+                        color: color_from_temperature_hrd(temp) * mag,
+                        ..default()
+                    },
+                    ..default()
+                };
+                stars.push(star_sprite);
+            }
+        }
+    }
+}
+
+pub fn update_transform(
+    mut star_query: Query<(&Star, &mut Transform, &mut Sprite), Added<Transform>>,
     galaxy_setting: Query<&galaxy_setting_component::GalaxySettings>,
 ) {
     let galaxy_setting = galaxy_setting.single();
-    for (star, mut transform) in &mut star_query {
-        transform.translation = calculate_translation(galaxy_setting, star);
+    for (star, mut transform, mut sprite) in &mut star_query {
+        let pos = calculate_position(
+            galaxy_setting,
+            star.a,
+            star.b,
+            star.theta0,
+            star.vel_theta,
+            star.tilt_angle,
+        );
+        transform.translation = pos.extend(0.);
+
+        let pos2 = calculate_position(
+            galaxy_setting,
+            star.a + 1000.,
+            star.b,
+            star.theta0,
+            star.vel_theta,
+            star.tilt_angle,
+        );
+
+        sprite.custom_size = match star.star_type {
+            StarType::Star => Some(Vec2::ONE * star.mag * 4.0),
+            StarType::Dust => Some(Vec2::ONE * star.mag * 5.0 * galaxy_setting.dust_render_size),
+            StarType::DustFilaments => {
+                Some(Vec2::ONE * star.mag * 2.0 * galaxy_setting.dust_render_size)
+            }
+            StarType::H2 => Some(Vec2::ONE * (((1000.0 - Vec2::distance(pos, pos2)) / 10.) - 50.)),
+            StarType::H2Core => {
+                Some(Vec2::ONE * 0.1 * (((1000.0 - Vec2::distance(pos, pos2)) / 10.) - 50.))
+            }
+        }
     }
 }
 
 const DEG_TO_RAD: f32 = 0.01745329251;
-
-// vec2 calcPos(float a, float b, float theta, float velTheta, float time, float tiltAngle) {
-//     float thetaActual = theta + velTheta * time;
-//     float beta = -tiltAngle;
-//     float alpha = thetaActual * DEG_TO_RAD;
-//     float cosalpha = cos(alpha);
-//     float sinalpha = sin(alpha);
-//     float cosbeta = cos(beta);
-//     float sinbeta = sin(beta);
-//     vec2 center = vec2(0,0);
-//     vec2 ps = vec2(center.x + (a * cosalpha * cosbeta - b * sinalpha * sinbeta),
-//                    center.y + (a * cosalpha * sinbeta + b * sinalpha * cosbeta));
-//     if (pertAmp > 0.0 && pertN > 0) {
-//         ps.x += (a / pertAmp) * sin(alpha * 2.0 * float(pertN));
-//         ps.y += (a / pertAmp) * cos(alpha * 2.0 * float(pertN));
-//     }
-// return ps;
-// }
-
-fn calculate_translation(setting: &galaxy_setting_component::GalaxySettings, star: &Star) -> Vec3 {
-    let theta_actual = star.theta0 + star.vel_theta;
-    let beta = -star.tilt_angle;
+fn calculate_position(
+    setting: &galaxy_setting_component::GalaxySettings,
+    a: f32,
+    b: f32,
+    theta0: f32,
+    vel_theta: f32,
+    tilt_angle: f32,
+) -> Vec2 {
+    let theta_actual = theta0 + vel_theta;
+    let beta = -tilt_angle;
     let alpha = theta_actual * DEG_TO_RAD;
     let cosalpha = alpha.cos();
     let sinalpha = alpha.sin();
     let cosbeta = beta.cos();
     let sinbeta = beta.sin();
 
-    let mut pos = Vec3 {
-        x: (star.a * cosalpha * cosbeta - star.b * sinalpha * sinbeta),
-        y: (star.a * cosalpha * sinbeta + star.b * sinalpha * cosbeta),
-        z: 0.,
+    let mut pos = Vec2 {
+        x: (a * cosalpha * cosbeta - b * sinalpha * sinbeta),
+        y: (a * cosalpha * sinbeta + b * sinalpha * cosbeta),
     };
 
     if setting.pert_amp > 0 && setting.pert_n > 0 {
-        pos.x += (star.a / setting.pert_amp as f32) * (alpha * 2.0 * setting.pert_n as f32).sin();
-        pos.y += (star.a / setting.pert_amp as f32) * (alpha * 2.0 * setting.pert_n as f32).cos();
+        pos.x += (a / setting.pert_amp as f32) * (alpha * 2.0 * setting.pert_n as f32).sin();
+        pos.y += (a / setting.pert_amp as f32) * (alpha * 2.0 * setting.pert_n as f32).cos();
     }
     pos
 }
