@@ -3,9 +3,16 @@ use bevy::prelude::*;
 
 use super::density_wave;
 use super::galaxy_setting_component;
+use super::lod_setting_resource;
 use super::pan_cam::PanCam;
 
 pub fn setup(mut commands: Commands, asset_server: Res<AssetServer>) {
+    commands.insert_resource(lod_setting_resource::LodSetting {
+        stars_visibility: Vec2 { x: 0., y: 10. },
+        other_visibility: Vec2 { x: 1., y: 90. },
+        ..default()
+    });
+
     commands.spawn((
         Camera2dBundle {
             camera: Camera {
@@ -45,6 +52,7 @@ pub fn setup(mut commands: Commands, asset_server: Res<AssetServer>) {
         count_dusts: 40000,
         count_dusts_filaments: 40000,
         count_h2: 400,
+        count_h2_core: 400,
         has_dark_matter: true,
         base_temp: 4000.,
         dust_render_size: 70.,

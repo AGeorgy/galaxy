@@ -20,6 +20,7 @@ pub struct GalaxySettings {
     pub count_dusts: usize,
     pub count_dusts_filaments: usize,
     pub count_h2: i32,
+    pub count_h2_core: i32,
     pub has_dark_matter: bool,
     pub base_temp: f32,
     pub dust_render_size: f32,

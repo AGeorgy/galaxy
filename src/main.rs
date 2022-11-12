@@ -12,5 +12,8 @@ fn main() {
         // .add_plugin(EguiPlugin)
         // .add_plugin(WorldInspectorPlugin::new())
         .add_plugin(app_plugin::AppPlugin)
+        // Loging
+        .add_plugin(bevy::diagnostic::LogDiagnosticsPlugin::default())
+        .add_plugin(bevy::diagnostic::FrameTimeDiagnosticsPlugin)
         .run();
 }
