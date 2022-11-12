@@ -18,10 +18,12 @@ pub fn setup(mut commands: Commands, asset_server: Res<AssetServer>) {
             },
             ..default()
         },
+        // Maximum zoom settings
         BloomSettings {
-            threshold: 0.15,
-            intensity: 10.,
-            ..default()
+            threshold: 0.19,
+            knee: 0.35,
+            scale: 5.0,
+            intensity: 10.0,
         },
         PanCam {
             min_scale: 0.01,

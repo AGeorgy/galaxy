@@ -52,6 +52,8 @@ fn create_all_objects(
 
     create_dusts_filaments(galaxy_setting, &sprite_handle, &mut rnd, &mut stars);
 
+    create_h2(galaxy_setting, &sprite_handle, &mut rnd, &mut stars);
+
     create_stars(
         galaxy_setting,
         density_wave,
@@ -59,8 +61,6 @@ fn create_all_objects(
         &mut rnd,
         &mut stars,
     );
-
-    create_h2(galaxy_setting, &sprite_handle, &mut rnd, &mut stars);
 
     stars
 }
@@ -255,6 +255,7 @@ fn create_dusts_filaments(
 }
 
 pub fn update_bloom_settings(
+    projection: Query<&OrthographicProjection>,
     mut camera: Query<&mut BloomSettings>,
     mut text: Query<&mut Text>,
     keycode: Res<Input<KeyCode>>,
@@ -270,6 +271,7 @@ pub fn update_bloom_settings(
     text.push_str(&format!("Knee: {}\n", bloom_settings.knee));
     text.push_str(&format!("Scale: {}\n", bloom_settings.scale));
     text.push_str(&format!("Intensity: {}\n", bloom_settings.intensity));
+    text.push_str(&format!("\n Camera scale: {}\n", projection.single().scale));
 
     text.push_str("\n\n");
 
