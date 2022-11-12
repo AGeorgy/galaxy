@@ -1,13 +1,34 @@
+use bevy::core_pipeline::bloom::BloomSettings;
 use bevy::prelude::*;
-use bevy_pancam::PanCam;
 
 use super::density_wave;
 use super::galaxy_setting_component;
+use super::pan_cam::PanCam;
 
-pub fn setup(mut commands: Commands) {
-    commands
-        .spawn_bundle(Camera2dBundle::default())
-        .insert(PanCam::default());
+pub fn setup(mut commands: Commands, asset_server: Res<AssetServer>) {
+    commands.spawn((
+        Camera2dBundle {
+            camera: Camera {
+                hdr: true, // 1. HDR must be enabled on the camera
+                ..default()
+            },
+            projection: OrthographicProjection {
+                scale: 70.,
+                ..default()
+            },
+            ..default()
+        },
+        BloomSettings {
+            threshold: 0.15,
+            intensity: 10.,
+            ..default()
+        },
+        PanCam {
+            min_scale: 0.01,
+            max_scale: Some(80.),
+            ..default()
+        },
+    ));
 
     let galaxy_settings = galaxy_setting_component::GalaxySettings {
         radius: 13000.,
@@ -47,9 +68,25 @@ pub fn setup(mut commands: Commands) {
     };
     density_wave.build();
 
-    commands
-        .spawn()
-        .insert(Name::from("Settings"))
-        .insert(galaxy_settings)
-        .insert(density_wave);
+    commands.spawn((Name::from("Settings"), galaxy_settings, density_wave));
+
+    commands.spawn(
+        TextBundle::from_section(
+            "",
+            TextStyle {
+                font: asset_server.load("fonts/FiraMono-Medium.ttf"),
+                font_size: 18.0,
+                color: Color::WHITE,
+            },
+        )
+        .with_style(Style {
+            position_type: PositionType::Absolute,
+            position: UiRect {
+                top: Val::Px(10.0),
+                left: Val::Px(10.0),
+                ..default()
+            },
+            ..default()
+        }),
+    );
 }

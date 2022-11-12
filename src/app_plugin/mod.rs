@@ -1,5 +1,7 @@
 use bevy::prelude::*;
 
+use super::pan_cam;
+
 mod density_wave;
 mod galaxy_setting_component;
 mod setup_system;
@@ -18,8 +20,13 @@ impl Plugin for AppPlugin {
             .register_type::<star_component::StarType>()
             .add_startup_system(setup_system::setup)
             .add_system(update_stars_system::update_stars)
-            // .add_plugin(bevy::diagnostic::LogDiagnosticsPlugin::default())
-            // .add_plugin(bevy::diagnostic::FrameTimeDiagnosticsPlugin)
-            .add_system(update_stars_system::update_transform);
+            .add_system(update_stars_system::update_transform)
+            .add_system(update_stars_system::update_bloom_settings)
+            // Camera
+            // .add_system(pan_cam::camera_movement)
+            // .add_system(pan_cam::camera_zoom)
+            // Loging
+            .add_plugin(bevy::diagnostic::LogDiagnosticsPlugin::default())
+            .add_plugin(bevy::diagnostic::FrameTimeDiagnosticsPlugin);
     }
 }

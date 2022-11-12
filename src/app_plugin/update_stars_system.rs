@@ -1,3 +1,4 @@
+use bevy::core_pipeline::bloom::BloomSettings;
 use bevy::prelude::*;
 use rand::prelude::*;
 
@@ -51,8 +52,6 @@ fn create_all_objects(
 
     create_dusts_filaments(galaxy_setting, &sprite_handle, &mut rnd, &mut stars);
 
-    create_h2(galaxy_setting, &sprite_handle, &mut rnd, &mut stars);
-
     create_stars(
         galaxy_setting,
         density_wave,
@@ -60,6 +59,8 @@ fn create_all_objects(
         &mut rnd,
         &mut stars,
     );
+
+    create_h2(galaxy_setting, &sprite_handle, &mut rnd, &mut stars);
 
     stars
 }
@@ -90,13 +91,6 @@ fn create_h2(
                 mag: mag,
                 star_type: StarType::H2,
             },
-            sprite: Sprite {
-                color: {
-                    let col = color_from_temperature_hrd(temp) * mag;
-                    Color::rgba(col.r() * 2.0, col.g() * 0.5, col.b() * 0.5, col.a())
-                },
-                ..default()
-            },
             ..default()
         };
         let core_h2 = star_component::StarSpriteBundle {
@@ -110,10 +104,6 @@ fn create_h2(
                 temp: temp,
                 mag: mag,
                 star_type: StarType::H2Core,
-            },
-            sprite: Sprite {
-                color: Color::rgba(1.0, 1.0, 1.0, 1.0),
-                ..default()
             },
             ..default()
         };
@@ -145,10 +135,6 @@ fn create_stars(
             mag: mag,
             star_type: StarType::Star,
         },
-        sprite: Sprite {
-            color: color_from_temperature_hrd(temp) * mag,
-            ..default()
-        },
         ..default()
     };
     stars.push(star);
@@ -169,10 +155,6 @@ fn create_stars(
                 temp: temp,
                 mag: mag,
                 star_type: StarType::Star,
-            },
-            sprite: Sprite {
-                color: color_from_temperature_hrd(temp) * mag,
-                ..default()
             },
             ..default()
         };
@@ -220,10 +202,6 @@ fn create_dusts(
                 mag,
                 star_type: StarType::Dust,
             },
-            sprite: Sprite {
-                color: color_from_temperature_hrd(temp) * mag,
-                ..default()
-            },
             ..default()
         };
 
@@ -268,15 +246,76 @@ fn create_dusts_filaments(
                         mag: mag + 0.025 * rnd.gen::<f32>(),
                         star_type: StarType::DustFilaments,
                     },
-                    sprite: Sprite {
-                        color: color_from_temperature_hrd(temp) * mag,
-                        ..default()
-                    },
                     ..default()
                 };
                 stars.push(star_sprite);
             }
         }
+    }
+}
+
+pub fn update_bloom_settings(
+    mut camera: Query<&mut BloomSettings>,
+    mut text: Query<&mut Text>,
+    keycode: Res<Input<KeyCode>>,
+    time: Res<Time>,
+) {
+    let mut bloom_settings = camera.single_mut();
+    let mut text = text.single_mut();
+    let text = &mut text.sections[0].value;
+
+    *text = "BloomSettings\n".to_string();
+    text.push_str("-------------\n");
+    text.push_str(&format!("Threshold: {}\n", bloom_settings.threshold));
+    text.push_str(&format!("Knee: {}\n", bloom_settings.knee));
+    text.push_str(&format!("Scale: {}\n", bloom_settings.scale));
+    text.push_str(&format!("Intensity: {}\n", bloom_settings.intensity));
+
+    text.push_str("\n\n");
+
+    text.push_str("Controls (-/+)\n");
+    text.push_str("---------------\n");
+    text.push_str("Q/W - Threshold\n");
+    text.push_str("E/R - Knee\n");
+    text.push_str("A/S - Scale\n");
+    text.push_str("D/F - Intensity\n");
+    text.push_str("Z - Reset\n");
+
+    let dt = time.delta_seconds();
+
+    if keycode.pressed(KeyCode::Q) {
+        bloom_settings.threshold -= dt;
+    }
+    if keycode.pressed(KeyCode::W) {
+        bloom_settings.threshold += dt;
+    }
+
+    if keycode.pressed(KeyCode::E) {
+        bloom_settings.knee -= dt;
+    }
+    if keycode.pressed(KeyCode::R) {
+        bloom_settings.knee += dt;
+    }
+
+    if keycode.pressed(KeyCode::A) {
+        bloom_settings.scale -= dt;
+    }
+    if keycode.pressed(KeyCode::S) {
+        bloom_settings.scale += dt;
+    }
+
+    if keycode.pressed(KeyCode::D) {
+        bloom_settings.intensity -= dt;
+    }
+    if keycode.pressed(KeyCode::F) {
+        bloom_settings.intensity += dt;
+    }
+    if keycode.pressed(KeyCode::Z) {
+        let new_boom_settings = BloomSettings::default();
+        bloom_settings.intensity = new_boom_settings.intensity;
+        bloom_settings.knee = new_boom_settings.knee;
+        bloom_settings.scale = new_boom_settings.scale;
+        bloom_settings.threshold = new_boom_settings.threshold;
     }
 }
 
@@ -315,7 +354,21 @@ pub fn update_transform(
             StarType::H2Core => {
                 Some(Vec2::ONE * 0.1 * (((1000.0 - Vec2::distance(pos, pos2)) / 10.) - 50.))
             }
-        }
+        };
+
+        sprite.color = match star.star_type {
+            StarType::Star => {
+                let mut color = color_from_temperature_hrd(star.temp) * star.mag;
+                color.set_a(1.);
+                color
+            }
+            StarType::Dust => color_from_temperature_hrd(star.temp) * star.mag,
+            StarType::DustFilaments => color_from_temperature_hrd(star.temp) * star.mag,
+            StarType::H2 => {
+                color_from_temperature_hrd(star.temp) * star.mag * Vec4::new(2.0, 0.5, 0.5, 1.0)
+            }
+            StarType::H2Core => Color::WHITE,
+        };
     }
 }
 
