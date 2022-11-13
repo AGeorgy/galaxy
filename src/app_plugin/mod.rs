@@ -2,9 +2,9 @@ use bevy::{prelude::*, winit::WinitSettings};
 
 use super::pan_cam;
 
-mod density_wave;
+pub mod density_wave;
 mod dust_fade_system;
-mod galaxy_setting_component;
+pub mod galaxy_setting_component;
 mod lod_setting_resource;
 mod setup_system;
 mod star_component;
@@ -26,7 +26,6 @@ impl Plugin for AppPlugin {
             .add_system(update_transform_system::update_transform)
             .add_system(update_color_system::update_color)
             // Update bloom while zooming
-            //.add_system(update_stars_system::update_bloom_settings)
             .add_system_to_stage(
                 CoreStage::PostUpdate,
                 stars_lod_system::update_stars_visibility,

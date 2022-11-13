@@ -111,24 +111,4 @@ pub fn setup(mut commands: Commands, asset_server: Res<AssetServer>) {
     // fs::write("assets/galaxy_settings.json", json).expect("Unable to write file");
     // let json = serde_json::to_string_pretty(&density_wave).unwrap();
     // fs::write("assets/density_wave.json", json).expect("Unable to write file");
-
-    commands.spawn(
-        TextBundle::from_section(
-            "",
-            TextStyle {
-                font: asset_server.load("fonts/FiraMono-Medium.ttf"),
-                font_size: 18.0,
-                color: Color::WHITE,
-            },
-        )
-        .with_style(Style {
-            position_type: PositionType::Absolute,
-            position: UiRect {
-                top: Val::Px(10.0),
-                left: Val::Px(10.0),
-                ..default()
-            },
-            ..default()
-        }),
-    );
 }
