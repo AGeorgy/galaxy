@@ -1,6 +1,7 @@
 use bevy::prelude::*;
+use serde::{Deserialize, Serialize};
 
-#[derive(Resource, Default)]
+#[derive(Resource, Default, Serialize, Deserialize)]
 pub struct DensityWave {
     pub min: f32,
     pub max: f32,
@@ -10,12 +11,18 @@ pub struct DensityWave {
     pub a: f32,
     pub bulge_radius: f32,
 
+    #[serde(skip)]
     pub m1: Vec<f32>,
+    #[serde(skip)]
     pub y1: Vec<f32>,
+    #[serde(skip)]
     pub x1: Vec<f32>,
 
+    #[serde(skip)]
     pub m2: Vec<f32>,
+    #[serde(skip)]
     pub y2: Vec<f32>,
+    #[serde(skip)]
     pub x2: Vec<f32>,
 }
 

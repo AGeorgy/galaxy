@@ -1,0 +1,21 @@
+{
+  "radius": 13000.0,
+  "bulge_radius": 4000.0,
+  "far_field_radius": 32000.0,
+  "angular_offset": 0.0004,
+  "inner_excentricity": 0.85,
+  "outter_excentricity": 0.95,
+  "ellipse_disturbances": 0,
+  "ellipse_disturbances_damping": 40,
+  "count_stars": 40000,
+  "count_dusts": 40000,
+  "count_dusts_filaments": 40000,
+  "count_h2": 400,
+  "count_h2_core": 400,
+  "has_dark_matter": true,
+  "base_temp": 4000.0,
+  "dust_render_size": 70.0,
+  "pert_n": 2,
+  "pert_amp": 40,
+  "seed": 1234567890
+}

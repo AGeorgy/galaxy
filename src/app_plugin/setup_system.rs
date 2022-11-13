@@ -1,3 +1,5 @@
+use std::fs;
+
 use bevy::core_pipeline::bloom::BloomSettings;
 use bevy::prelude::*;
 
@@ -39,48 +41,76 @@ pub fn setup(mut commands: Commands, asset_server: Res<AssetServer>) {
         ..default()
     });
 
-    let galaxy_settings = galaxy_setting_component::GalaxySettings {
-        radius: 13000.,
-        far_field_radius: 16000. * 2.,
-        bulge_radius: 4000.,
-        angular_offset: 0.0004,
-        inner_excentricity: 0.85,
-        outter_excentricity: 0.95,
-        ellipse_disturbances: 0,
-        ellipse_disturbances_damping: 40,
-        count_stars: 40000,
-        count_dusts: 40000,
-        count_dusts_filaments: 40000,
-        count_h2: 400,
-        count_h2_core: 400,
-        has_dark_matter: true,
-        base_temp: 4000.,
-        dust_render_size: 70.,
-        seed: 1234567890,
-        pert_n: 2,
-        pert_amp: 40,
-    };
+    // Reading settings from json
+    const FILE_NAME_GALAXY: &str = "assets/galaxy_settings.json";
+    let galaxy_settings: galaxy_setting_component::GalaxySettings =
+        match fs::read_to_string(FILE_NAME_GALAXY) {
+            Ok(file) => {
+                info!("Setting {} is loaded", FILE_NAME_GALAXY);
+                serde_json::from_str(&file).unwrap()
+            }
+            Err(_) => {
+                warn!("Unable to read file. Setup default.");
+                galaxy_setting_component::GalaxySettings {
+                    radius: 13000.,
+                    far_field_radius: 16000. * 2.,
+                    bulge_radius: 4000.,
+                    angular_offset: 0.0004,
+                    inner_excentricity: 0.85,
+                    outter_excentricity: 0.95,
+                    ellipse_disturbances: 0,
+                    ellipse_disturbances_damping: 40,
+                    count_stars: 40000,
+                    count_dusts: 40000,
+                    count_dusts_filaments: 40000,
+                    count_h2: 400,
+                    count_h2_core: 400,
+                    has_dark_matter: true,
+                    base_temp: 4000.,
+                    dust_render_size: 70.,
+                    seed: 1234567890,
+                    pert_n: 2,
+                    pert_amp: 40,
+                }
+            }
+        };
 
+    const FILE_NAME_WAVE: &str = "assets/density_wave.json";
     let wave_steps = 1000;
-    let mut density_wave = density_wave::DensityWave {
-        min: 0.,
-        max: galaxy_settings.radius as f32 * 2.,
-        steps: wave_steps,
-        i0: 1.,
-        k: 0.02,
-        a: galaxy_settings.radius as f32 / 3.,
-        bulge_radius: galaxy_settings.bulge_radius,
-        m1: Vec::with_capacity(wave_steps.try_into().unwrap()),
-        y1: Vec::with_capacity(wave_steps.try_into().unwrap()),
-        x1: Vec::with_capacity(wave_steps.try_into().unwrap()),
-        m2: Vec::with_capacity(wave_steps.try_into().unwrap()),
-        y2: Vec::with_capacity(wave_steps.try_into().unwrap()),
-        x2: Vec::with_capacity(wave_steps.try_into().unwrap()),
+    let mut density_wave: density_wave::DensityWave = match fs::read_to_string(FILE_NAME_WAVE) {
+        Ok(file) => {
+            info!("Setting {} is loaded", FILE_NAME_WAVE);
+            serde_json::from_str(&file).unwrap()
+        }
+        Err(_) => {
+            warn!("Unable to read file. Setup default.");
+            density_wave::DensityWave {
+                min: 0.,
+                max: galaxy_settings.radius as f32 * 2.,
+                steps: wave_steps,
+                i0: 1.,
+                k: 0.02,
+                a: galaxy_settings.radius as f32 / 3.,
+                bulge_radius: galaxy_settings.bulge_radius,
+                m1: Vec::with_capacity(wave_steps.try_into().unwrap()),
+                y1: Vec::with_capacity(wave_steps.try_into().unwrap()),
+                x1: Vec::with_capacity(wave_steps.try_into().unwrap()),
+                m2: Vec::with_capacity(wave_steps.try_into().unwrap()),
+                y2: Vec::with_capacity(wave_steps.try_into().unwrap()),
+                x2: Vec::with_capacity(wave_steps.try_into().unwrap()),
+            }
+        }
     };
     density_wave.build();
 
     commands.insert_resource(galaxy_settings);
     commands.insert_resource(density_wave);
+
+    // Writing settings to json
+    // let json = serde_json::to_string_pretty(&galaxy_settings).unwrap();
+    // fs::write("assets/galaxy_settings.json", json).expect("Unable to write file");
+    // let json = serde_json::to_string_pretty(&density_wave).unwrap();
+    // fs::write("assets/density_wave.json", json).expect("Unable to write file");
 
     commands.spawn(
         TextBundle::from_section(

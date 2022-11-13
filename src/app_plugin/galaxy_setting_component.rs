@@ -1,11 +1,12 @@
 use bevy::prelude::*;
+use serde::{Deserialize, Serialize};
 use std::f32;
 
 const PC_TO_KM: f32 = 3.08567758129e13;
 const SEC_PER_YEAR: f32 = 365.25 * 86400.;
 const CONSTANT_OF_GRAVITY: f32 = 6.672e-11;
 
-#[derive(Resource, Default)]
+#[derive(Resource, Default, Serialize, Deserialize)]
 pub struct GalaxySettings {
     pub radius: f32,
     pub bulge_radius: f32,
