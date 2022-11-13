@@ -18,8 +18,8 @@ pub struct GalaxySettings {
     pub count_stars: usize,
     pub count_dusts: usize,
     pub count_dusts_filaments: usize,
-    pub count_h2: i32,
-    pub count_h2_core: i32,
+    pub count_h2: usize,
+    pub count_h2_core: usize,
     pub has_dark_matter: bool,
     pub base_temp: f32,
     pub dust_render_size: f32,
@@ -29,9 +29,13 @@ pub struct GalaxySettings {
 }
 
 impl GalaxySettings {
-    // pub fn get_count_all_objects(&self) -> usize {
-    //     self.count_stars
-    // }
+    pub fn get_count_all_objects(&self) -> usize {
+        self.count_stars
+            + self.count_dusts
+            + self.count_dusts_filaments
+            + self.count_h2
+            + self.count_h2_core
+    }
 
     pub fn get_excentricity(&self, rad: f32) -> f32 {
         if rad < self.bulge_radius {
