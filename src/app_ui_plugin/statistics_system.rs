@@ -3,9 +3,9 @@ use bevy::{
     prelude::*,
 };
 
-use super::app_plugin::galaxy_setting_component::GalaxySettings;
+use super::{app_plugin::galaxy_setting_component::GalaxySettings, components::FpsTag};
 
-pub fn update_fps(diagnostics: Res<Diagnostics>, mut query: Query<&mut Text>) {
+pub fn update_fps(diagnostics: Res<Diagnostics>, mut query: Query<&mut Text, With<FpsTag>>) {
     for mut text in &mut query {
         let mut fps = 0.0;
         if let Some(fps_diagnostic) = diagnostics.get(FrameTimeDiagnosticsPlugin::FPS) {
@@ -18,7 +18,10 @@ pub fn update_fps(diagnostics: Res<Diagnostics>, mut query: Query<&mut Text>) {
     }
 }
 
-pub fn update_stars_count(galaxy_settings: Res<GalaxySettings>, mut query: Query<&mut Text>) {
+pub fn update_stars_count(
+    galaxy_settings: Res<GalaxySettings>,
+    mut query: Query<&mut Text, With<FpsTag>>,
+) {
     if !galaxy_settings.is_changed() {
         return;
     }

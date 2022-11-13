@@ -8,7 +8,7 @@ use super::galaxy_setting_component;
 use super::lod_setting_resource;
 use super::pan_cam::PanCam;
 
-pub fn setup(mut commands: Commands, asset_server: Res<AssetServer>) {
+pub fn setup(mut commands: Commands) {
     commands.spawn((
         Camera2dBundle {
             camera: Camera {

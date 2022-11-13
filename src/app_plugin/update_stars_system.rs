@@ -1,4 +1,3 @@
-use bevy::core_pipeline::bloom::BloomSettings;
 use bevy::prelude::*;
 use rand::prelude::*;
 
@@ -231,7 +230,7 @@ fn create_dusts(
     is_visibile: bool,
 ) -> Vec<(star_component::DustTag, star_component::StarSpriteBundle)> {
     let mag = 0.02 + 0.15 * rnd.gen::<f32>();
-    let mut rad: f32 = 0.0;
+    let mut rad: f32;
     let mut stars: Vec<(star_component::DustTag, star_component::StarSpriteBundle)> = vec![];
 
     // Initialize dust
@@ -325,71 +324,4 @@ fn create_dusts_filaments(
         }
     }
     stars
-}
-
-pub fn update_bloom_settings(
-    projection: Query<&OrthographicProjection>,
-    mut camera: Query<&mut BloomSettings>,
-    mut text: Query<&mut Text>,
-    keycode: Res<Input<KeyCode>>,
-    time: Res<Time>,
-) {
-    let mut bloom_settings = camera.single_mut();
-    let mut text = text.single_mut();
-    let text = &mut text.sections[0].value;
-
-    *text = "BloomSettings\n".to_string();
-    text.push_str("-------------\n");
-    text.push_str(&format!("Threshold: {}\n", bloom_settings.threshold));
-    text.push_str(&format!("Knee: {}\n", bloom_settings.knee));
-    text.push_str(&format!("Scale: {}\n", bloom_settings.scale));
-    text.push_str(&format!("Intensity: {}\n", bloom_settings.intensity));
-    text.push_str(&format!("\n Camera scale: {}\n", projection.single().scale));
-
-    text.push_str("\n\n");
-
-    text.push_str("Controls (-/+)\n");
-    text.push_str("---------------\n");
-    text.push_str("Q/W - Threshold\n");
-    text.push_str("E/R - Knee\n");
-    text.push_str("A/S - Scale\n");
-    text.push_str("D/F - Intensity\n");
-    text.push_str("Z - Reset\n");
-
-    let dt = time.delta_seconds();
-
-    if keycode.pressed(KeyCode::Q) {
-        bloom_settings.threshold -= dt;
-    }
-    if keycode.pressed(KeyCode::W) {
-        bloom_settings.threshold += dt;
-    }
-
-    if keycode.pressed(KeyCode::E) {
-        bloom_settings.knee -= dt;
-    }
-    if keycode.pressed(KeyCode::R) {
-        bloom_settings.knee += dt;
-    }
-
-    if keycode.pressed(KeyCode::A) {
-        bloom_settings.scale -= dt;
-    }
-    if keycode.pressed(KeyCode::S) {
-        bloom_settings.scale += dt;
-    }
-
-    if keycode.pressed(KeyCode::D) {
-        bloom_settings.intensity -= dt;
-    }
-    if keycode.pressed(KeyCode::F) {
-        bloom_settings.intensity += dt;
-    }
-    if keycode.pressed(KeyCode::Z) {
-        let new_boom_settings = BloomSettings::default();
-        bloom_settings.intensity = new_boom_settings.intensity;
-        bloom_settings.knee = new_boom_settings.knee;
-        bloom_settings.scale = new_boom_settings.scale;
-        bloom_settings.threshold = new_boom_settings.threshold;
-    }
 }
