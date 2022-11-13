@@ -1,4 +1,4 @@
-use bevy::prelude::*;
+use bevy::{prelude::*, winit::WinitSettings};
 
 use super::pan_cam;
 
@@ -18,11 +18,8 @@ pub struct AppPlugin;
 impl Plugin for AppPlugin {
     fn build(&self, app: &mut App) {
         app.insert_resource(ClearColor(Color::BLACK))
-            .insert_resource(ClearColor(Color::BLACK))
-            .register_type::<galaxy_setting_component::GalaxySettings>()
-            .register_type::<density_wave::DensityWave>()
-            .register_type::<star_component::Star>()
-            // .register_type::<star_component::StarType>()
+            // Only run the app when there is user input. This will significantly reduce CPU/GPU use.
+            .insert_resource(WinitSettings::desktop_app())
             .add_startup_system(setup_system::setup)
             .add_system(update_stars_system::update_stars)
             // Update transform and color if changed

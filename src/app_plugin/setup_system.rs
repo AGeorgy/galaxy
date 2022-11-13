@@ -7,12 +7,6 @@ use super::lod_setting_resource;
 use super::pan_cam::PanCam;
 
 pub fn setup(mut commands: Commands, asset_server: Res<AssetServer>) {
-    commands.insert_resource(lod_setting_resource::LodSetting {
-        stars_visibility: Vec2 { x: 0., y: 10. },
-        other_visibility: Vec2 { x: 1., y: 90. },
-        ..default()
-    });
-
     commands.spawn((
         Camera2dBundle {
             camera: Camera {
@@ -39,6 +33,12 @@ pub fn setup(mut commands: Commands, asset_server: Res<AssetServer>) {
         },
     ));
 
+    commands.insert_resource(lod_setting_resource::LodSetting {
+        stars_visibility: Vec2 { x: 0., y: 10. },
+        other_visibility: Vec2 { x: 1., y: 90. },
+        ..default()
+    });
+
     let galaxy_settings = galaxy_setting_component::GalaxySettings {
         radius: 13000.,
         far_field_radius: 16000. * 2.,
@@ -60,6 +60,7 @@ pub fn setup(mut commands: Commands, asset_server: Res<AssetServer>) {
         pert_n: 2,
         pert_amp: 40,
     };
+
     let wave_steps = 1000;
     let mut density_wave = density_wave::DensityWave {
         min: 0.,
@@ -78,7 +79,8 @@ pub fn setup(mut commands: Commands, asset_server: Res<AssetServer>) {
     };
     density_wave.build();
 
-    commands.spawn((Name::from("Settings"), galaxy_settings, density_wave));
+    commands.insert_resource(galaxy_settings);
+    commands.insert_resource(density_wave);
 
     commands.spawn(
         TextBundle::from_section(

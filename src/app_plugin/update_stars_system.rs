@@ -8,78 +8,72 @@ use super::{lod_setting_resource, star_component};
 
 pub fn update_stars(
     mut commands: Commands,
-    settings_query: Query<
-        (
-            &galaxy_setting_component::GalaxySettings,
-            &density_wave::DensityWave,
-        ),
-        Or<(
-            Changed<galaxy_setting_component::GalaxySettings>,
-            Changed<density_wave::DensityWave>,
-        )>,
-    >,
+    galaxy_setting: Res<galaxy_setting_component::GalaxySettings>,
+    density_wave: Res<density_wave::DensityWave>,
     mut stars: Query<Entity, With<star_component::Star>>,
     assets: Res<AssetServer>,
     lod_settings: Res<lod_setting_resource::LodSetting>,
 ) {
-    for (galaxy_setting, density_wave) in &settings_query {
-        if !stars.is_empty() {
-            // delete all
-            for star_entity in &mut stars {
-                commands.entity(star_entity).despawn();
-            }
-        }
-
-        create_all_objects(
-            &mut commands,
-            galaxy_setting,
-            density_wave,
-            assets.load("particle.png"),
-            &lod_settings,
-        );
+    if !galaxy_setting.is_changed() && !density_wave.is_changed() {
+        return;
     }
+
+    if !stars.is_empty() {
+        // delete all
+        for star_entity in &mut stars {
+            commands.entity(star_entity).despawn();
+        }
+    }
+
+    create_all_objects(
+        &mut commands,
+        galaxy_setting,
+        density_wave,
+        assets.load("particle.png"),
+        &lod_settings,
+    );
 }
 
 fn create_all_objects(
     commands: &mut Commands,
-    galaxy_setting: &galaxy_setting_component::GalaxySettings,
-    density_wave: &density_wave::DensityWave,
+    galaxy_setting: Res<galaxy_setting_component::GalaxySettings>,
+    density_wave: Res<density_wave::DensityWave>,
     sprite_handle: Handle<Image>,
     lod_settings: &Res<lod_setting_resource::LodSetting>,
 ) {
     let mut rnd = StdRng::seed_from_u64(galaxy_setting.seed);
 
     commands.spawn_batch(create_dusts(
-        galaxy_setting,
-        density_wave,
+        &galaxy_setting,
+        &density_wave,
         &sprite_handle,
         &mut rnd,
         lod_settings.is_other_visibile,
     ));
 
     commands.spawn_batch(create_dusts_filaments(
-        galaxy_setting,
+        &galaxy_setting,
         &sprite_handle,
         &mut rnd,
         lod_settings.is_other_visibile,
     ));
 
     commands.spawn_batch(create_h2(
-        galaxy_setting,
+        &galaxy_setting,
         &sprite_handle,
         &mut rnd,
         lod_settings.is_other_visibile,
     ));
     commands.spawn_batch(create_h2_core(
-        galaxy_setting,
+        &galaxy_setting,
         &sprite_handle,
         &mut rnd,
         lod_settings.is_other_visibile,
     ));
 
     commands.spawn_batch(create_stars(
-        galaxy_setting,
-        density_wave,
+        &galaxy_setting,
+        &density_wave,
         &sprite_handle,
         &mut rnd,
         lod_settings.is_stars_visibile,
@@ -87,7 +81,7 @@ fn create_all_objects(
 }
 
 fn create_h2(
-    galaxy_setting: &galaxy_setting_component::GalaxySettings,
+    galaxy_setting: &Res<galaxy_setting_component::GalaxySettings>,
     sprite_handle: &Handle<Image>,
     rnd: &mut StdRng,
     is_visibile: bool,
@@ -126,7 +120,7 @@ fn create_h2(
 }
 
 fn create_h2_core(
-    galaxy_setting: &galaxy_setting_component::GalaxySettings,
+    galaxy_setting: &Res<galaxy_setting_component::GalaxySettings>,
     sprite_handle: &Handle<Image>,
     rnd: &mut StdRng,
     is_visibile: bool,
@@ -165,8 +159,8 @@ fn create_h2_core(
 }
 
 fn create_stars(
-    galaxy_setting: &galaxy_setting_component::GalaxySettings,
-    density_wave: &density_wave::DensityWave,
+    galaxy_setting: &Res<galaxy_setting_component::GalaxySettings>,
+    density_wave: &Res<density_wave::DensityWave>,
     sprite_handle: &Handle<Image>,
     rnd: &mut StdRng,
     is_visibile: bool,
@@ -230,8 +224,8 @@ fn create_stars(
 }
 
 fn create_dusts(
-    galaxy_setting: &galaxy_setting_component::GalaxySettings,
-    density_wave: &density_wave::DensityWave,
+    galaxy_setting: &Res<galaxy_setting_component::GalaxySettings>,
+    density_wave: &Res<density_wave::DensityWave>,
     sprite_handle: &Handle<Image>,
     rnd: &mut StdRng,
     is_visibile: bool,
@@ -282,7 +276,7 @@ fn create_dusts(
 }
 
 fn create_dusts_filaments(
-    galaxy_setting: &galaxy_setting_component::GalaxySettings,
+    galaxy_setting: &Res<galaxy_setting_component::GalaxySettings>,
     sprite_handle: &Handle<Image>,
     rnd: &mut StdRng,
     is_visibile: bool,

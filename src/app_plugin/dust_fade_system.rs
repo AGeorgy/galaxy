@@ -16,31 +16,44 @@ pub fn update_dust_fade(
         )>,
     >,
 ) {
-    const MIN_KNEE: f32 = 0.16;
-    const MAX_KNEE: f32 = 0.35;
+    const KNEE_0: f32 = 0.4;
+    const KNEE_1: f32 = 0.16;
+    const KNEE_2: f32 = 0.35;
     for projection in &projection_query {
-        if !lod_settings.is_other_visibile {
-            return;
+        if lod_settings.is_other_visibile {
+            if projection.scale > lod_settings.other_visibility.x
+                && projection.scale < lod_settings.other_visibility.y
+            {
+                bloom_settings_query.single_mut().knee = remap(
+                    lod_settings.other_visibility.x,
+                    lod_settings.other_visibility.y,
+                    KNEE_1,
+                    KNEE_2,
+                    projection.scale,
+                );
+
+                for (alpha, mut sprite) in &mut star_query {
+                    let mut color = sprite.color;
+                    color.set_a(remap(
+                        lod_settings.other_visibility.x,
+                        lod_settings.other_visibility.y,
+                        0.,
+                        alpha.0,
+                        projection.scale,
+                    ));
+                    sprite.color = color;
+                }
+            }
         }
 
-        let mut bloom_settings = bloom_settings_query.single_mut();
-        bloom_settings.knee = remap(
-            lod_settings.other_visibility.x,
-            lod_settings.other_visibility.y,
-            MIN_KNEE,
-            MAX_KNEE,
-            projection.scale,
-        );
-        for (alpha, mut sprite) in &mut star_query {
-            let mut color = sprite.color;
-            color.set_a(remap(
-                lod_settings.other_visibility.x,
-                lod_settings.other_visibility.y,
+        if projection.scale < lod_settings.other_visibility.x {
+            bloom_settings_query.single_mut().knee = remap(
                 0.,
-                alpha.0,
+                lod_settings.other_visibility.x,
+                KNEE_0,
+                KNEE_1,
                 projection.scale,
-            ));
-            sprite.color = color;
+            );
         }
     }
 }

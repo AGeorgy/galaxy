@@ -1,7 +1,6 @@
-use bevy::{prelude::*, reflect::FromReflect};
+use bevy::prelude::*;
 
-#[derive(Component, Debug, Default, Clone, Reflect, FromReflect)]
-#[reflect(Component)]
+#[derive(Resource, Default)]
 pub struct DensityWave {
     pub min: f32,
     pub max: f32,
